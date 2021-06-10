@@ -1,6 +1,8 @@
 # excel_project
 
 A new Flutter project.
+NOTE:
+You should upload data then display to view it
 
 ## Getting Started
 
