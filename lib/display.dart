@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:pdftron_flutter/pdftron_flutter.dart';
 // import 'package:pdftron_flutter/pdftron_flutter.dart';
@@ -15,6 +16,7 @@ class _DisplayState extends State<Display> {
 
   @override
   Widget build(BuildContext context) {
+    bool k=false;
     return Scaffold(
       appBar: AppBar(
         title: Text('Excel-Files'),
@@ -31,16 +33,18 @@ class _DisplayState extends State<Display> {
                   padding: EdgeInsets.all(10.0),
                   // height: 30,
                   child: ListView(
-                    children: snapshot.data.documents.map((DocumentSnapshot document){
+                    children: snapshot.data.documents
+                        .map((DocumentSnapshot document) {
                       return new Card(
                         color: Color(0xFFF2AA4C),
-                        child: Column(
+                        child: Row(
                           mainAxisSize: MainAxisSize.min,
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                              TextButton(
+                            TextButton(
                               child: Center(
                                 child: Text(
-                                    document['filename'],
+                                  document['filename'],
                                   style: TextStyle(
                                     fontFamily: 'times new roman',
                                     fontStyle: FontStyle.italic,
@@ -48,31 +52,48 @@ class _DisplayState extends State<Display> {
                                   ),
                                 ),
                               ),
-                              onPressed: (){
+                              onPressed: () {
                                 PdftronFlutter.openDocument(document['url']);
                               },
                             ),
+                            IconButton(
+                              color: Colors.red,
+                              icon: Icon(Icons.delete_outline_rounded),
+                              onPressed: () async {
+                                String file = document['url'];
+                                var docid = document.documentID.toString();
+                                StorageReference storage = await FirebaseStorage
+                                    .instance
+                                    .getReferenceFromUrl(file);
+                                await storage.delete().then((value) => k=true);
+                                if(k) {
+                                  Firestore.instance
+                                      .collection('FileUrl')
+                                      .document(docid)
+                                      .delete();
+                                }
+                              },
+                            )
                           ],
                         ),
                       );
                     }).toList(),
                   ),
-          );
+                );
         },
       ),
       backgroundColor: Colors.grey[700],
     );
   }
-
-// Future<void> getCsFile() async{
-//  final res = await FilePicker.getFile();
-//  if(res==null) return;
-//  final path = res.path.toString();
-//  setState(() {
-//    file = File(path);
-//  });
-//  print(path.runtimeType);
-//  print(path);
-//  PdftronFlutter.openDocument(path);
-// }
 }
+
+// class Snak extends StatelessWidget {
+//   // const snak({key? key}) : super(key: key);
+//
+//   @override
+//   Widget build(BuildContext context) {
+//     return SnackBar(
+//       content: Text("Successfully Deleted"),
+//     );
+//   }
+// }
